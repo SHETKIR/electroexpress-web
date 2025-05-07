@@ -66,8 +66,50 @@ async function setupDatabase() {
       }
     }
     
-    const [productCount] = await connection.query('SELECT COUNT(*) as count FROM products');
+    const [userTables] = await connection.query(
+      `SELECT TABLE_NAME FROM information_schema.TABLES 
+       WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'users'`,
+      [dbConfig.database]
+    );
     
+    if (userTables.length === 0) {
+      console.log('Creating users table...');
+      
+      await connection.query(`
+        CREATE TABLE users (
+          id BIGINT PRIMARY KEY AUTO_INCREMENT,
+          username VARCHAR(50) NOT NULL UNIQUE,
+          password VARCHAR(255) NOT NULL,
+          email VARCHAR(100) NOT NULL UNIQUE,
+          full_name VARCHAR(100),
+          role ENUM('admin', 'user') NOT NULL DEFAULT 'user',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          last_login TIMESTAMP NULL,
+          is_active TINYINT(1) DEFAULT 1
+        )
+      `);
+      
+      console.log('Users table created successfully!');
+      
+      console.log('Adding default users...');
+      
+      await connection.query(`
+        INSERT INTO users (username, password, email, full_name, role) VALUES
+        ('admin', 'adminpassword', 'admin@electroexpress.com', 'Administrator', 'admin'),
+        ('user1', 'userpassword1', 'user1@example.com', 'Regular User 1', 'user'),
+        ('user2', 'userpassword2', 'user2@example.com', 'Regular User 2', 'user')
+      `);
+      
+      console.log('Default users added successfully!');
+    } else {
+      console.log('Users table already exists.');
+    }
+    
+    const [productCount] = await connection.query('SELECT COUNT(*) as count FROM products');
+    const [userCount] = await connection.query('SELECT COUNT(*) as count FROM users');
+    
+    console.log(`Current database has ${productCount[0].count} products and ${userCount[0].count} users.`);
     console.log('Database setup completed successfully!');
     
   } catch (error) {

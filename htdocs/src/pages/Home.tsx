@@ -13,7 +13,7 @@ interface Product {
   updated_at: string | null;
 }
 
-const API_URL = 'http://localhost:3001';
+const API_URL = 'http://localhost:3002';
 
 const Home: React.FC = () => {
   const [discountedProducts, setDiscountedProducts] = useState<Product[]>([]);

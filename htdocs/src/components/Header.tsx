@@ -21,7 +21,9 @@ const Header: React.FC = () => {
     <header className="main-header">
       <div className="container">
         <div className="header-content">
-          <div className="logo">ElectroExpress</div>
+          <div className="logo">
+            <Link to="/">ElectroExpress</Link>
+          </div>
           <nav className="main-nav">
             <ul>
               <li><Link to="/about" className={isActive('/about') ? 'active' : ''}>О нас</Link></li>

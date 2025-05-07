@@ -1,38 +1,33 @@
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m'
+#!/bin/bash
 
-cd "$(dirname "$0")/htdocs" || { echo -e "${RED}Failed to change to htdocs directory${NC}"; exit 1; }
+pkill -f "node htdocs/simple-server.js" || true
+pkill -f "vite" || true
 
-echo -e "${YELLOW}Setting up the database...${NC}"
-npm run db-setup
+cd "$(dirname "$0")"
 
-if [ $? -ne 0 ]; then
-    echo -e "${RED}Database setup failed. Aborting.${NC}"
-    exit 1
+if [ ! -d "htdocs/node_modules" ]; then
+  echo "Installing dependencies..."
+  cd htdocs && npm install && cd ..
 fi
 
-echo -e "${YELLOW}Starting API server in the background...${NC}"
-npm run api &
-API_PID=$!
+echo "Checking database connection..."
+node htdocs/check-db.js
 
-sleep 2
+echo "Starting ElectroExpress server..."
 
-if kill -0 $API_PID 2>/dev/null; then
-    echo -e "${GREEN}API server started successfully (PID: $API_PID)${NC}"
-    echo -e "${GREEN}API available at: http://localhost:3001/api/products${NC}"
-else
-    echo -e "${RED}API server failed to start. Aborting.${NC}"
-    exit 1
-fi
+node htdocs/simple-server.js &
 
-echo -e "${YELLOW}Starting frontend development server...${NC}"
-echo -e "${YELLOW}Press Ctrl+C to stop both servers${NC}"
+echo "Starting Vite development server..."
+cd htdocs && npm run dev &
 
-npm run dev
+echo "Opening application in browser..."
+sleep 3
+xdg-open http://localhost:5173
 
-echo -e "${YELLOW}Stopping API server (PID: $API_PID)...${NC}"
-kill $API_PID
+echo "ElectroExpress is running!"
+echo "Server API: http://localhost:3002/api/products"
+echo "Frontend: http://localhost:5173"
+echo ""
+echo "Press Ctrl+C to stop all servers"
 
-echo -e "${GREEN}All servers stopped.${NC}" 
+wait 
