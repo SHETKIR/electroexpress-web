@@ -7,11 +7,14 @@ const PORT = 3002;
 
 
 const dbConfig = {
-  host: 'db.dvl.to',
-  port: 3306,
-  user: 'root',
-  password: 'mypassword',
-  database: 'electroexpress',
+  host: process.env.DB_HOST || 'localhost',
+  port: parseInt(process.env.DB_PORT, 10) || 3306,
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'electroexpress',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 };
 
 const pool = mysql.createPool(dbConfig);

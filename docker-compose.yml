@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3002:3002"
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT:3306
+      - DB_USER=root
+      - DB_PASSWORD=2845
+      - DB_NAME=electroexpress
+    depends_on:
+      - mysql
+    volumes:
+      - ./htdocs:/app
+
+  mysql:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 2845
+      MYSQL_DATABASE: electroexpress
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: 2845
+    depends_on:
+      - mysql
+
+volumes:
+  mysql_data:
