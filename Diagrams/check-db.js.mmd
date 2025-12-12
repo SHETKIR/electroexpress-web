@@ -1,0 +1,18 @@
+sequenceDiagram
+    participant Script as check-db.js
+    participant MySQL
+    participant Setup as db-setup.js
+
+    Script->>MySQL: Попытка подключения к electroexpress
+    alt Успешное подключение
+        MySQL-->>Script: Подтверждение соединения
+        Script->>Script: Вывод "Database is ready!"
+    else Ошибка подключения
+        MySQL-->>Script: Ошибка соединения
+        Script->>Script: Вывод "Error: ..."
+        Script->>Script: Вывод "Trying to setup Database..."
+        Script->>Setup: exec('node db-setup.js')
+        Setup->>MySQL: Настройка базы данных
+        Setup-->>Script: Результат настройки
+        Script->>Script: Вывод "Script executed successfully!"
+    end

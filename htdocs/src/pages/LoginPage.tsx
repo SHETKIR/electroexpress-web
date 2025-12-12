@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import '../styles/login.css';
 
 const API_URL = 'http://localhost:3002';
@@ -95,6 +96,9 @@ const LoginPage: React.FC = () => {
           <button type="submit" className="login-button" disabled={loading}>
             {loading ? 'Вход...' : 'Войти'}
           </button>
+          <div className="login-footer">
+            <p>Нет аккаунта? <Link to="/register">Зарегистрироваться</Link></p>
+          </div>
         </form>
         
         <div className="login-info">

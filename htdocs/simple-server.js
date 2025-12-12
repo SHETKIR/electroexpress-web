@@ -61,6 +61,48 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { username, password, email, full_name } = req.body;
+    
+    if (!username || !password || !email) {
+      return res.status(400).json({ error: 'Username, password and email are required' });
+    }
+    
+    const [existingUsers] = await pool.query(
+      'SELECT id FROM users WHERE username = ? OR email = ?',
+      [username, email]
+    );
+    
+    if (existingUsers.length > 0) {
+      return res.status(409).json({ error: 'User with this username or email already exists' });
+    }
+    
+    const [result] = await pool.query(
+      `INSERT INTO users (username, password, email, full_name, role, created_at, updated_at, is_active)
+       VALUES (?, ?, ?, ?, 'user', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1)`,
+      [username, password, email, full_name || null]
+    );
+    
+    if (result.affectedRows === 0) {
+      return res.status(500).json({ error: 'Failed to create user' });
+    }
+    
+    const [users] = await pool.query(
+      'SELECT id, username, email, full_name, role FROM users WHERE id = ?',
+      [result.insertId]
+    );
+    
+    res.status(201).json({
+      message: 'User registered successfully',
+      user: users[0]
+    });
+  } catch (error) {
+    console.error('Error in /api/auth/register endpoint:', error);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
 app.get('/api/users', async (req, res) => {
   try {
     const [users] = await pool.query(

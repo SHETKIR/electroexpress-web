@@ -598,13 +598,13 @@ body {
   background-color: rgba(244, 67, 54, 0.1);
 }
 
-.sidebar-login-link {
+.sidebar-login-link, .sidebar-register-link {
   color: #2196f3;
   text-decoration: none;
   font-weight: 500;
 }
 
-.sidebar-login-link:hover {
+.sidebar-login-link, .sidebar-register-link:hover {
   text-decoration: none;
 }
 
@@ -653,7 +653,7 @@ body {
   padding: 2rem 0;
 }
 
-.main-nav a, .sidebar-main-nav a, .sidebar-login-link,
+.main-nav a, .sidebar-main-nav a, .sidebar-login-link, .sidebar-register-link,
 .user-profile-link, .login-link {
   padding: 6px 12px;
   border-radius: 4px;
@@ -667,7 +667,7 @@ body {
   transition: all 0.3s ease;
 }
 
-.main-nav a:hover, .sidebar-main-nav a:hover, .sidebar-login-link:hover, 
+.main-nav a:hover, .sidebar-main-nav a:hover, .sidebar-login-link:hover, .sidebar-register-link:hover, 
 .sidebar-username:hover, .user-profile-link:hover, .login-link:hover {
   background-color: rgba(0, 0, 0, 0.1);
   color: #333;
@@ -800,3 +800,10 @@ body {
   color: #333;
   line-height: 1.6;
 } 
+
+/* Добавить в конец файла */
+.sidebar-auth-links {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}

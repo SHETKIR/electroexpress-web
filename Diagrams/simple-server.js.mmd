@@ -1,0 +1,48 @@
+sequenceDiagram
+    participant Client
+    participant Server
+    participant Database
+    participant Pool
+
+    Client->>Server: HTTP Request
+    Server->>Server: Middleware processing
+    alt Аутентификация
+        Server->>Database: Проверить пользователя (login/password)
+        Database-->>Server: Данные пользователя
+        Server->>Server: Обновить last_login
+        Server-->>Client: JWT токен и данные пользователя
+    else Работа с продуктами
+        alt GET /products
+            Server->>Database: SELECT * FROM products
+            Database-->>Server: Список товаров
+            Server-->>Client: JSON массив товаров
+        else POST /products
+            Server->>Database: Проверить MAX(id)
+            Database-->>Server: Максимальный ID
+            Server->>Database: INSERT INTO products(...)
+            Database-->>Server: Результат вставки
+            Server->>Database: SELECT * FROM products WHERE id=?
+            Database-->>Server: Созданный товар
+            Server-->>Client: Данные о новом товаре
+        else PUT/DELETE /products/:id
+            Server->>Database: Проверить существование товара
+            Database-->>Server: Результат проверки
+            alt Товар существует
+                Server->>Database: Обновить/удалить товар
+                Database-->>Server: Результат операции
+                Server-->>Client: Статус операции
+            else Товар не существует
+                Server-->>Client: 404 Not Found
+            end
+        end
+    else Работа с корзиной
+        alt GET /cart?userId
+            Server->>Database: SELECT ... FROM cart_items JOIN products
+            Database-->>Server: Товары в корзине
+            Server-->>Client: JSON массив товаров корзины
+        else POST/PUT/DELETE /cart
+            Server->>Database: Добавить/обновить/удалить товар в корзине
+            Database-->>Server: Результат операции
+            Server-->>Client: Статус операции
+        end
+    end

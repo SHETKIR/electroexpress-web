@@ -70,7 +70,10 @@ const Sidebar: React.FC = () => {
                 <button onClick={handleLogout} className="sidebar-logout-btn">Выйти</button>
               </div>
             ) : (
-              <Link to="/login" className="sidebar-login-link">Войти</Link>
+              <div className="sidebar-auth-links">
+                <Link to="/login" className="sidebar-login-link">Войти</Link>
+                <Link to="/register" className="sidebar-register-link">Регистрация</Link>
+              </div>
             )}
           </div>
         </div>

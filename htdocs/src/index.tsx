@@ -7,6 +7,7 @@ import About from './pages/About';
 import Catalog from './pages/Catalog';
 import ProductPage from './pages/ProductPage';
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import ShoppingCart from './pages/ShoppingCart';
 import EditProduct from './pages/EditProduct';
@@ -27,6 +28,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/edit-product/:id" element={<EditProduct />} />
           <Route path="/add-product" element={<AddProduct />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/shopping-cart" element={<ShoppingCart />} /> 
           <Route path="*" element={<Home />} />
