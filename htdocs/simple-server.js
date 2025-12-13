@@ -434,6 +434,221 @@ app.delete('/api/cart/:id', async (req, res) => {
   }
 });
 
+app.post('/api/orders', async (req, res) => {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    
+    const { user_id, items, shipping_address } = req.body;
+    
+    if (!user_id) {
+      await connection.rollback();
+      return res.status(400).json({ error: 'Необходимо указать ID пользователя' });
+    }
+    
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      await connection.rollback();
+      return res.status(400).json({ error: 'Заказ должен содержать хотя бы один товар' });
+    }
+    
+    if (!shipping_address || shipping_address.trim().length === 0) {
+      await connection.rollback();
+      return res.status(400).json({ error: 'Необходимо указать адрес доставки' });
+    }
+    
+    let totalAmount = 0;
+    items.forEach(item => {
+      const price = parseFloat(item.item_price);
+      const discount = item.item_discount || 0;
+      const discountedPrice = price * (1 - discount / 100);
+      totalAmount += discountedPrice * item.item_quantity;
+    });
+    
+    const [orderResult] = await connection.query(
+      `INSERT INTO orders (user_id, total_amount, shipping_address, status)
+       VALUES (?, ?, ?, 'new')`,
+      [user_id, totalAmount.toFixed(2), shipping_address.trim()]
+    );
+    
+    const orderId = orderResult.insertId;
+    
+    for (const item of items) {
+      const price = parseFloat(item.item_price);
+      const discount = item.item_discount || 0;
+      const discountedPrice = price * (1 - discount / 100);
+      
+      await connection.query(
+        `INSERT INTO order_items (order_id, product_id, quantity, price_per_item, discount_percent)
+         VALUES (?, ?, ?, ?, ?)`,
+        [
+          orderId, 
+          item.product_id, 
+          item.item_quantity, 
+          discountedPrice.toFixed(2), 
+          discount
+        ]
+      );
+    }
+    
+    await connection.query('DELETE FROM cart_items WHERE user_id = ?', [user_id]);
+    
+    await connection.commit();
+    
+    res.status(201).json({
+      message: 'Заказ успешно оформлен',
+      order: {
+        id: orderId,
+        total_amount: totalAmount.toFixed(2),
+        shipping_address: shipping_address.trim()
+      }
+    });
+  } catch (error) {
+    await connection.rollback();
+    console.error('Error creating order:', error);
+    res.status(500).json({ error: 'Ошибка при оформлении заказа' });
+  } finally {
+    connection.release();
+  }
+});
+app.get('/api/orders/user/:userId', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+    
+    const [orders] = await pool.query(
+      `SELECT o.*, 
+              (SELECT COUNT(*) FROM order_items WHERE order_id = o.id) as item_count,
+              (SELECT SUM(quantity) FROM order_items WHERE order_id = o.id) as total_items
+       FROM orders o
+       WHERE o.user_id = ?
+       ORDER BY o.order_date DESC`,
+      [userId]
+    );
+    
+    res.json(orders);
+  } catch (error) {
+    console.error('Error fetching user orders:', error);
+    res.status(500).json({ error: 'Failed to fetch orders' });
+  }
+});
+
+app.get('/api/orders/:orderId', async (req, res) => {
+  try {
+    const orderId = parseInt(req.params.orderId);
+    if (isNaN(orderId)) {
+      return res.status(400).json({ error: 'Invalid order ID' });
+    }
+    
+    const [orders] = await pool.query(
+      `SELECT o.*, u.username, u.email, u.full_name
+       FROM orders o
+       JOIN users u ON o.user_id = u.id
+       WHERE o.id = ?`,
+      [orderId]
+    );
+    
+    if (orders.length === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    
+    const order = orders[0];
+    
+    const [items] = await pool.query(
+      `SELECT oi.*, p.name, p.description, p.image_url
+       FROM order_items oi
+       JOIN products p ON oi.product_id = p.id
+       WHERE oi.order_id = ?`,
+      [orderId]
+    );
+    
+    const orderItems = items.map(item => {
+      const price = parseFloat(item.price_per_item);
+      const discount = item.discount_percent ? parseFloat(item.discount_percent) / 100 : 0;
+      const discountedPrice = price * (1 - discount);
+      const itemTotal = discountedPrice * item.quantity;
+      
+      return {
+        ...item,
+        price_per_item: price,
+        discounted_price: discountedPrice,
+        item_total: itemTotal
+      };
+    });
+    
+    res.json({
+      order,
+      items: orderItems
+    });
+    
+  } catch (error) {
+    console.error('Error fetching order details:', error);
+    res.status(500).json({ error: 'Failed to fetch order details' });
+  }
+});
+
+app.post('/api/orders', async (req, res) => {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    
+    const { userId, items, shipping_address } = req.body;
+    
+    if (!userId || !items || !shipping_address) {
+      await connection.rollback();
+      return res.status(400).json({ error: 'Необходимо указать адрес доставки' });
+    }
+    
+    let totalAmount = 0;
+    items.forEach(item => {
+      const price = parseFloat(item.price);
+      const discount = item.discount_percent || 0;
+      const discountedPrice = price * (1 - discount / 100);
+      totalAmount += discountedPrice * item.quantity;
+    });
+    
+    const [orderResult] = await connection.query(
+      `INSERT INTO orders (user_id, total_amount, shipping_address, status)
+       VALUES (?, ?, ?, 'new')`,
+      [userId, totalAmount.toFixed(2), shipping_address]
+    );
+    
+    const orderId = orderResult.insertId;
+    
+    for (const item of items) {
+      const price = parseFloat(item.price);
+      const discount = item.discount_percent || 0;
+      const discountedPrice = price * (1 - discount / 100);
+      
+      await connection.query(
+        `INSERT INTO order_items (order_id, product_id, quantity, price_per_item, discount_percent)
+         VALUES (?, ?, ?, ?, ?)`,
+        [orderId, item.product_id, item.quantity, discountedPrice.toFixed(2), discount]
+      );
+    }
+    
+    await connection.query('DELETE FROM cart_items WHERE user_id = ?', [userId]);
+    
+    await connection.commit();
+    
+    res.status(201).json({
+      message: 'Заказ успешно оформлен',
+      order: {
+        id: orderId,
+        total_amount: totalAmount.toFixed(2),
+        shipping_address: shipping_address
+      }
+    });
+  } catch (error) {
+    await connection.rollback();
+    console.error('Error creating order:', error);
+    res.status(500).json({ error: 'Ошибка при оформлении заказа' });
+  } finally {
+    connection.release();
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`API available at http://localhost:${PORT}/api/products`);

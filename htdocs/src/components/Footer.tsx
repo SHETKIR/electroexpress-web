@@ -8,7 +8,7 @@ const currentYear = new Date().getFullYear();
     <footer className="main-footer">
       <div className="container">
         <div className="copyright">
-          &copy; {currentYear} ElectroExpress. Все права защищены.
+          &copy; {currentYear} ElectroExpress. Все права под угрозой!
         </div>
       </div>
     </footer>

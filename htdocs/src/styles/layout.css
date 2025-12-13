@@ -801,7 +801,6 @@ body {
   line-height: 1.6;
 } 
 
-/* Добавить в конец файла */
 .sidebar-auth-links {
   display: flex;
   gap: 10px;

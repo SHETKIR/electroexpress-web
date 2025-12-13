@@ -48,11 +48,7 @@ const RegisterPage: React.FC = () => {
 
       const data = await response.json();
       setSuccess(true);
-      
-      // Автоматический вход после регистрации
       localStorage.setItem('user', JSON.stringify(data.user));
-      
-      // Редирект на главную страницу через 2 секунды
       setTimeout(() => {
         navigate('/');
       }, 2000);
