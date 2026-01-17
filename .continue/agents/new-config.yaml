@@ -1,0 +1,17 @@
+name: My Config
+version: 0.0.1
+schema: v1
+
+models:
+  - name: Qwen
+    provider: openai
+    model: Qwen3-MAX
+    apiBase: http://api.mulerouter.ai/vendors/qwen/v1
+    apiKey: sk-mr-7e854c996ba74492812ee8ceace27f4fbb0d16774f130504d6aa02cb996959d4
+    roles:
+      - apply
+      - autocomplete
+      - chat
+      - edit
+      - embed
+      - rerank

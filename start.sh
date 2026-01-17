@@ -1,5 +1,6 @@
 #!/bin/bash
 
+echo "Остановка существующего сервера..."
 pkill -f "node htdocs/simple-server.js" || true
 pkill -f "vite" || true
 
@@ -17,7 +18,8 @@ echo "Starting ElectroExpress server..."
 
 node htdocs/simple-server.js &
 
-echo "Starting Vite development server..."
+echo "Starting Vite develop
+ment server..."
 cd htdocs && npm run dev &
 
 echo "Opening application in browser..."

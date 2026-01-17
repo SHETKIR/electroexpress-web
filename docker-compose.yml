@@ -1,0 +1,31 @@
+services:
+  mysql:
+    image: mysql:9.2
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: electroexpress
+      MYSQL_USER: root
+      MYSQL_PASSWORD: rootpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    depends_on:
+      - mysql
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: rootpassword
+    ports:
+      - "8080:80"
+
+volumes:
+  mysql_data:
+    driver: local
